@@ -37,6 +37,12 @@
 		};
 	};
 
+    gpio_init {
+        compatible = "gpio-keys";
+        pinctrl-names = "default";
+        pinctrl-0 = <&pinctrl_gpios>;
+    };
+
 	regulators {
 		compatible = "simple-bus";
 		#address-cells = <1>;
@@ -192,6 +198,7 @@
 				MX8MM_IOMUXC_ENET_RX_CTL_ENET1_RGMII_RX_CTL	0x91
 				MX8MM_IOMUXC_ENET_TX_CTL_ENET1_RGMII_TX_CTL	0x1f
 				MX8MM_IOMUXC_SAI2_RXC_GPIO4_IO22	0x19
+				/*MX8MM_IOMUXC_SAI2_RXD_GPIO4_IO23	0x19 */ /* tom added - J8-2 GPIO */ 
 			>;
 		};
 
@@ -327,8 +334,15 @@
 			fsl,pins = <
 				MX8MM_IOMUXC_UART1_RXD_UART1_DCE_RX	0x140
 				MX8MM_IOMUXC_UART1_TXD_UART1_DCE_TX	0x140
-				MX8MM_IOMUXC_UART3_RXD_UART1_DCE_CTS_B	0x140
-				MX8MM_IOMUXC_UART3_TXD_UART1_DCE_RTS_B	0x140
+				/* MX8MM_IOMUXC_UART3_RXD_UART1_DCE_CTS_B	0x140 */ /* tom - these are borrowed for gpios */
+				/* MX8MM_IOMUXC_UART3_TXD_UART1_DCE_RTS_B	0x140 */
+			>;
+		};
+
+		pinctrl_gpios: gpiogrp {
+			fsl,pins = <
+				MX8MM_IOMUXC_UART3_RXD_GPIO5_IO26	0x19
+				MX8MM_IOMUXC_UART3_TXD_GPIO5_IO27	0x19
 			>;
 		};
 
@@ -491,6 +505,15 @@
 				MX8MM_IOMUXC_GPIO1_IO11_USB2_OTG_ID		0x19
 			>;
 		};
+
+        pinctrl_ecspi2: ecspi2grp {
+            fsl,pins = <
+                MX8MM_IOMUXC_ECSPI2_SS0_GPIO5_IO13 0x19 /* CS: spi chip-select (gpio-mode) */
+                MX8MM_IOMUXC_ECSPI2_SCLK_ECSPI2_SCLK 0x19 /* SCK: spi clock */
+                MX8MM_IOMUXC_ECSPI2_MISO_ECSPI2_MISO 0x19 /* MISO: spi master-in-slave-out */
+                MX8MM_IOMUXC_ECSPI2_MOSI_ECSPI2_MOSI 0x19 /* MOSI: spi master-out-slave-in */
+            >;
+        };
 	};
 };
 
@@ -684,6 +707,13 @@
 		abracon,tc-diode = "schottky";
 		abracon,tc-resistor = <3>;
         };
+
+    /* add i2c devices on mikrobus header here */
+    /* mikroE EEPROM 3 click */
+    /* eeprom@50 { */
+    /*     compatible = "atmel,24c02"; */
+    /*     reg = <0x50>; */
+    /* }; */
 
 	eeprom_carrier: eeprom@57{
                 compatible = "st,24c02", "atmel,24c02";
@@ -941,4 +971,18 @@
 
 &vpu_h1 {
 	status = "okay";
+};
+
+/* mikrobus spi */
+&ecspi2 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&pinctrl_ecspi2>;
+	cs-gpios = <&gpio5 13 GPIO_ACTIVE_HIGH>;
+    status = "okay";
+
+    spi@0 {
+        compatible = "rohm,dh2228fv"; /* spidev driver binds to this string */
+        reg = <0>;
+        spi-max-frequency = <660000>;
+    };
 };
